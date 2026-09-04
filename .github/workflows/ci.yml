@@ -29,9 +29,12 @@ jobs:
         run: |
           git config --global user.email "ci@example.com"
           git config --global user.name "CI"
+          SRC="$(pwd)"
           TAP_DIR="$(brew --repository)/Library/Taps/alexcoll/homebrew-tap"
           mkdir -p "$TAP_DIR"
-          cp -R . "$TAP_DIR"
+          cp -R "$SRC/Formula" "$TAP_DIR/"
+          cp -R "$SRC/.github" "$TAP_DIR/" 2>/dev/null || true
+          cp "$SRC/README.md" "$SRC/LICENSE" "$TAP_DIR/" 2>/dev/null || true
           git -C "$TAP_DIR" init -q
           git -C "$TAP_DIR" add -A
           git -C "$TAP_DIR" commit -qm init
