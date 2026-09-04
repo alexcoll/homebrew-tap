@@ -25,8 +25,20 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
 
+      - name: Tap local copy of alexcoll/tap
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          TAP_DIR="$(brew --repository)/Library/Taps/alexcoll/homebrew-tap"
+          mkdir -p "$TAP_DIR"
+          cp -R . "$TAP_DIR"
+          git -C "$TAP_DIR" init -q
+          git -C "$TAP_DIR" add -A
+          git -C "$TAP_DIR" commit -qm init
+          brew tap alexcoll/tap
+
       - name: Install formula from source
-        run: brew install --build-from-source ./Formula/bandcamp-dl-rb.rb
+        run: brew install --build-from-source bandcamp-dl-rb
 
       - name: Run formula test
         run: brew test bandcamp-dl-rb
