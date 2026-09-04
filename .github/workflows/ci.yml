@@ -25,21 +25,8 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
 
-      - name: Tap local copy of alexcoll/tap
-        run: |
-          git config --global user.email "ci@example.com"
-          git config --global user.name "CI"
-          TAP_DIR="$(brew --repository)/Library/Taps/alexcoll/homebrew-tap"
-          if [ "$(cd "$(pwd)" && pwd)" != "$(cd "$TAP_DIR" && pwd)" ]; then
-            rm -rf "$TAP_DIR"
-            mkdir -p "$(dirname "$TAP_DIR")"
-            cp -R "$(pwd)" "$TAP_DIR"
-          fi
-          rm -rf "$TAP_DIR/.git"
-          git -C "$TAP_DIR" init -q
-          git -C "$TAP_DIR" add -A
-          git -C "$TAP_DIR" commit -qm init
-          brew tap alexcoll/tap
+      - name: Tap alexcoll/tap
+        run: brew tap alexcoll/tap
 
       - name: Install formula from source
         run: brew install --build-from-source bandcamp-dl-rb
@@ -51,4 +38,4 @@ jobs:
         run: bandcamp_dl_rb --help | grep -q 'bandcamp_dl_rb'
 
       - name: Audit formula
-        run: brew audit --strict ./Formula/bandcamp-dl-rb.rb
+        run: brew audit --strict bandcamp-dl-rb
