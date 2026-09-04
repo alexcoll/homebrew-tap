@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-linuxbrew:
+    name: brew install (Linuxbrew)
+    runs-on: ubuntu-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install formula from source
+        run: brew install --build-from-source ./Formula/bandcamp-dl-rb.rb
+
+      - name: Run formula test
+        run: brew test bandcamp-dl-rb
+
+      - name: Run the CLI
+        run: bandcamp_dl_rb --help | grep -q 'bandcamp_dl_rb'
+
+      - name: Audit formula
+        run: brew audit --strict ./Formula/bandcamp-dl-rb.rb
