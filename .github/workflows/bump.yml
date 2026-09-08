@@ -3,6 +3,8 @@ name: Bump formula
 on:
   schedule:
     - cron: '0 2 * * *'
+  repository_dispatch:
+    types: [formula-bump]
   workflow_dispatch:
 
 permissions:
