@@ -1,0 +1,53 @@
+name: Bump formula
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest release tag
+        id: release
+        run: |
+          tag=$(gh release view --repo alexcoll/bandcamp-dl-rb --json tagName --jq .tagName)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Update formula
+        run: |
+          tag="${{ steps.release.outputs.tag }}"
+          formula=Formula/bandcamp-dl-rb.rb
+          sha=$(curl -sL "https://github.com/alexcoll/bandcamp-dl-rb/archive/refs/tags/${tag}.tar.gz" | shasum -a 256 | awk '{print $1}')
+          sed -E "s|tags/v[0-9.]+\.tar\.gz|tags/${tag}.tar.gz|" "$formula" > "$formula.tmp"
+          sed -E "s|sha256 \"[0-9a-f]{64}\"|sha256 \"${sha}\"|" "$formula.tmp" > "$formula"
+          rm "$formula.tmp"
+
+      - name: Open bump PR
+        run: |
+          if git diff --quiet; then
+            echo "Formula already up to date"
+            exit 0
+          fi
+          tag="${{ steps.release.outputs.tag }}"
+          branch="bump-${tag}"
+          title="Update bandcamp-dl-rb to ${tag}"
+          if gh pr list --state open --title "$title" --json number --jq 'length' | grep -q "^[1-9]"; then
+            echo "PR for ${tag} already open"
+            exit 0
+          fi
+          git checkout -b "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/bandcamp-dl-rb.rb
+          git commit -m "$title"
+          git push -u origin "$branch"
+          gh pr create --title "$title" --body "Auto-bumped from the latest bandcamp-dl-rb release (${tag})."
