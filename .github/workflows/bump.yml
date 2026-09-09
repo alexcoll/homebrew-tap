@@ -35,7 +35,7 @@ jobs:
           sed -E "s|sha256 \"[0-9a-f]{64}\"|sha256 \"${sha}\"|" "$formula.tmp" > "$formula"
           rm "$formula.tmp"
 
-      - name: Open bump PR
+      - name: Open and merge bump PR
         run: |
           if git diff --quiet; then
             echo "Formula already up to date"
@@ -44,14 +44,25 @@ jobs:
           tag="${{ steps.release.outputs.tag }}"
           branch="bump-${tag}"
           title="Update bandcamp-dl-rb to ${tag}"
-          if gh pr list --state open --head "$branch" --json number --jq 'length' | grep -q "^[1-9]"; then
-            echo "PR for ${tag} already open"
-            exit 0
+
+          stale_numbers="$(gh pr list --state open --json number,headRefName \
+            --jq "[.[] | select(.headRefName | startswith(\"bump-\") and . != \"${branch}\") | .number] | join(\" \")")"
+          if [ -n "$stale_numbers" ]; then
+            for number in $stale_numbers; do
+              gh pr close "$number" --comment "Superseded by the ${tag} bump (${branch})."
+            done
           fi
-          git checkout -b "$branch"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/bandcamp-dl-rb.rb
-          git commit -m "$title"
-          git push -f -u origin "$branch"
-          gh pr create --title "$title" --body "Auto-bumped from the latest bandcamp-dl-rb release (${tag})."
+
+          pr_number="$(gh pr list --state open --head "$branch" --json number --jq '.[0].number // empty')"
+          if [ -z "$pr_number" ]; then
+            git checkout -b "$branch"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Formula/bandcamp-dl-rb.rb
+            git commit -m "$title"
+            git push -f -u origin "$branch"
+            gh pr create --title "$title" --body "Auto-bumped from the latest bandcamp-dl-rb release (${tag})."
+            pr_number="$(gh pr list --state open --head "$branch" --json number --jq '.[0].number')"
+          fi
+
+          gh pr merge "$pr_number" --repo alexcoll/homebrew-tap --squash --delete-branch
