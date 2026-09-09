@@ -44,7 +44,7 @@ jobs:
           tag="${{ steps.release.outputs.tag }}"
           branch="bump-${tag}"
           title="Update bandcamp-dl-rb to ${tag}"
-          if gh pr list --state open --title "$title" --json number --jq 'length' | grep -q "^[1-9]"; then
+          if gh pr list --state open --head "$branch" --json number --jq 'length' | grep -q "^[1-9]"; then
             echo "PR for ${tag} already open"
             exit 0
           fi
