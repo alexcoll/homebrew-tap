@@ -53,5 +53,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Formula/bandcamp-dl-rb.rb
           git commit -m "$title"
-          git push -u origin "$branch"
+          git push -f -u origin "$branch"
           gh pr create --title "$title" --body "Auto-bumped from the latest bandcamp-dl-rb release (${tag})."
