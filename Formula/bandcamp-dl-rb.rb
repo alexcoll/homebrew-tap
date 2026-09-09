@@ -13,6 +13,13 @@ class BandcampDlRb < Formula
     ENV["BUNDLE_WITHOUT"] = "development test"
     ENV["GEM_HOME"] = libexec
 
+    # The gemspec reads VERSION from version.rb. Stamp it with the formula's
+    # version so a stale version in the source archive can't build a gem whose
+    # name doesn't match what we install below.
+    inreplace "lib/bandcamp_dl_rb/version.rb",
+              /VERSION = '[^']*'/,
+              "VERSION = '#{version.to_s}'"
+
     system "bundle", "install"
     system "gem", "build", "#{name}.gemspec"
     system "gem", "install", "--ignore-dependencies", "--no-document",
