@@ -65,4 +65,24 @@ jobs:
             pr_number="$(gh pr list --state open --head "$branch" --json number --jq '.[0].number')"
           fi
 
-          gh pr merge "$pr_number" --repo alexcoll/homebrew-tap --squash --delete-branch
+          # GitHub computes PR mergeability asynchronously; a merge attempted
+          # right after PR creation can fail with "not mergeable" even for a
+          # clean, conflict-free PR. Poll until the merge succeeds or the PR
+          # is already merged, then give up.
+          for _ in $(seq 1 40); do
+            pr_state="$(gh pr view "$pr_number" --repo alexcoll/homebrew-tap --json state --jq .state)"
+            if [ "$pr_state" = "MERGED" ]; then
+              echo "PR #$pr_number already merged"
+              exit 0
+            fi
+            mergeable="$(gh pr view "$pr_number" --repo alexcoll/homebrew-tap --json mergeable --jq .mergeable)"
+            if [ "$pr_state" = "OPEN" ] && [ "$mergeable" = "MERGEABLE" ] && \
+                gh pr merge "$pr_number" --repo alexcoll/homebrew-tap --squash --delete-branch; then
+              echo "Merged PR #$pr_number"
+              exit 0
+            fi
+            echo "PR #$pr_number state=$pr_state mergeable=$mergeable; retrying in 5s"
+            sleep 5
+          done
+          echo "Timed out waiting to merge PR #$pr_number" >&2
+          exit 1
