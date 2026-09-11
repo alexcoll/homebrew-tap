@@ -36,9 +36,12 @@ class BandcampDlRb < Formula
     (bin/exe).write_env_script libexec_bin/exe,
                                PATH:     "#{formula_opt_bin("ruby")}:$PATH",
                                GEM_HOME: libexec
+
+    man1.install "man/bandcamp_dl_rb.1"
   end
 
   test do
     assert_match "bandcamp_dl_rb", shell_output("#{bin}/bandcamp_dl_rb --help")
+    assert_predicate share/"man/man1/bandcamp_dl_rb.1", :exist?
   end
 end
