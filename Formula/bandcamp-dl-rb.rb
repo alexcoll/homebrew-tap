@@ -1,8 +1,8 @@
 class BandcampDlRb < Formula
   desc "Download your Bandcamp purchases and organize them for a Plex library"
   homepage "https://github.com/alexcoll/bandcamp-dl-rb"
-  url "https://github.com/alexcoll/bandcamp-dl-rb/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "9a9489cd945174598cb2200d5f195532d69de1ba37e6555cda4c740a8b6ee80f"
+  url "https://github.com/alexcoll/bandcamp-dl-rb/archive/refs/tags/v1.1.0.tar.gz"
+  sha256 "50ad01d94534bda8ff155d1c86b6671220d6e9b42cdc1e714fc52f2831049397"
   license "GPL-3.0-only"
 
   depends_on "ruby"
